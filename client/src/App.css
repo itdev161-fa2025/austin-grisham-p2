@@ -1,0 +1,79 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 10vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.movie-table {
+  width: 80%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  font-size: 1.1rem;
+}
+
+.movie-table th,
+.movie-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  cursor: pointer;
+}
+
+.movie-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.movie-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.movie-table td {
+  padding: 12px;
+  color: #555;
+}
+
+/* Sorting Arrow Styles */
+th.sorted-asc::after {
+  content: " ↑";
+}
+
+th.sorted-desc::after {
+  content: " ↓";
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
