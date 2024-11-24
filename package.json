@@ -1,7 +1,7 @@
 {
-  "name": "austin-grisham",
+  "name": "recipevault-app",
   "version": "1.0.0",
-  "description": "push test",
+  "description": "A web application to manage and share recipes.",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -21,7 +21,8 @@
     "esm": "^3.2.25",
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
-    "mongoose": "^8.6.1"
+    "mongoose": "^8.6.1",
+    "dotenv": "^16.3.1" 
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

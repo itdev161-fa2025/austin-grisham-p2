@@ -1,31 +1,62 @@
 import React from 'react';
 import './App.css';
 import axios from 'axios';
+import AddRecipe from './AddRecipe';
 
 class App extends React.Component {
   state = {
-    data: [], // Movies data
-    loading: true, // Loading state
-    error: null, // Error state
-    sortConfig: { key: 'title', direction: 'ascending' }, // Sorting state
+    data: [],
+    loading: true,
+    error: null,
+    sortConfig: { key: 'name', direction: 'ascending' }, 
+    editingRecipe: null, 
   };
 
   componentDidMount() {
-    // Fetch movies from the API
-    axios.get('http://localhost:5000/api/movies')
+    this.fetchRecipes();
+  }
+
+  fetchRecipes = () => {
+    axios
+      .get('http://localhost:5000/api/recipes')
       .then((response) => {
         this.setState({
           data: response.data,
-          loading: false // Set loading to false when data is fetched
+          loading: false,
         });
       })
       .catch((error) => {
-        console.error(`Error fetching movies: ${error}`);
+        console.error(`Error fetching recipes: ${error}`);
         this.setState({ error: error.message, loading: false });
       });
-  }
+  };
 
-  // Sort handler function
+  handleRecipeAdded = (newRecipe) => {
+    this.setState((prevState) => ({
+      data: [...prevState.data, newRecipe],
+    }));
+  };
+
+  handleRecipeUpdated = (updatedRecipe) => {
+    this.setState((prevState) => ({
+      data: prevState.data.map((recipe) =>
+        recipe._id === updatedRecipe._id ? updatedRecipe : recipe
+      ),
+      editingRecipe: null, 
+    }));
+  };
+
+  handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/recipes/${id}`);
+      this.setState((prevState) => ({
+        data: prevState.data.filter((recipe) => recipe._id !== id),
+      }));
+    } catch (err) {
+      console.error('Error deleting recipe:', err);
+    }
+  };
+
   handleSort = (key) => {
     const { sortConfig, data } = this.state;
     let direction = 'ascending';
@@ -46,21 +77,19 @@ class App extends React.Component {
 
     this.setState({
       data: sortedData,
-      sortConfig: { key, direction }
+      sortConfig: { key, direction },
     });
   };
 
   render() {
-    const { data, loading, error, sortConfig } = this.state;
+    const { data, loading, error, sortConfig, editingRecipe } = this.state;
 
-    // Show a loading message while data is being fetched
     if (loading) {
-      return <div className='App'>Loading movies...</div>;
+      return <div className="App">Loading recipes...</div>;
     }
 
-    // Show an error message if the API call fails
     if (error) {
-      return <div className='App'>Error fetching movies: {error}</div>;
+      return <div className="App">Error fetching recipes: {error}</div>;
     }
 
     const getArrowClass = (key) => {
@@ -71,44 +100,77 @@ class App extends React.Component {
     };
 
     return (
-      <div className='App'>
-        <header className='App-header'>
-          Movie Watchlist
-        </header>
-        <table className="movie-table">
+      <div className="App">
+        <header className="App-header">Recipe Vault</header>
+
+        {}
+        <AddRecipe
+          onRecipeAdded={this.handleRecipeAdded}
+          editingRecipe={editingRecipe}
+          onRecipeUpdated={this.handleRecipeUpdated}
+        />
+
+        {}
+        <table className="recipe-table">
           <thead>
             <tr>
-              <th onClick={() => this.handleSort('title')} className={getArrowClass('title')}>
-                Title
+              <th onClick={() => this.handleSort('name')} className={getArrowClass('name')}>
+                Name
               </th>
-              <th onClick={() => this.handleSort('director')} className={getArrowClass('director')}>
-                Director
+              <th onClick={() => this.handleSort('cuisine')} className={getArrowClass('cuisine')}>
+                Cuisine
               </th>
-              <th onClick={() => this.handleSort('releaseYear')} className={getArrowClass('releaseYear')}>
-                Release Year
+              <th onClick={() => this.handleSort('preparationTime')} className={getArrowClass('preparationTime')}>
+                Preparation Time
               </th>
-              <th onClick={() => this.handleSort('genre')} className={getArrowClass('genre')}>
-                Genre
-              </th>
-              <th onClick={() => this.handleSort('rating')} className={getArrowClass('rating')}>
-                Rating
-              </th>
+              <th>Ingredients</th>
+              <th>Instructions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.length > 0 ? (
-              data.map((movie) => (
-                <tr key={movie._id}>
-                  <td>{movie.title}</td>
-                  <td>{movie.director}</td>
-                  <td>{movie.releaseYear}</td>
-                  <td>{movie.genre}</td>
-                  <td>{movie.rating}</td>
+              data.map((recipe) => (
+                <tr key={recipe._id}>
+                  <td>{recipe.name}</td>
+                  <td>{recipe.cuisine}</td>
+                  <td>{recipe.preparationTime} min</td>
+                  <td>{recipe.ingredients.join(', ')}</td>
+                  <td>{recipe.instructions}</td>
+                  <td>
+                    <button
+                      style={{
+                        backgroundColor: 'red',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 10px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        marginRight: '5px',
+                      }}
+                      onClick={() => this.handleDelete(recipe._id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      style={{
+                        backgroundColor: 'yellow',
+                        color: 'black',
+                        border: 'none',
+                        padding: '6px 10px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => this.setState({ editingRecipe: recipe })}
+                    >
+                      Edit
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5">No movies found.</td>
+                <td colSpan="6">No recipes found.</td>
               </tr>
             )}
           </tbody>

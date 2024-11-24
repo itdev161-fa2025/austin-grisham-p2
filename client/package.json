@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "recipevault-client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

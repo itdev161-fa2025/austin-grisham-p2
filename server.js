@@ -1,67 +1,123 @@
 import express from 'express';
 import { check, validationResult } from 'express-validator';
-import connectDatabase from './config/db.js';
-import Movie from './models/Movie.js';  // Your Movie model
+import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import Recipe from './models/Recipe.js'; 
 
-// Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-connectDatabase();
 
-// Middleware to handle JSON requests and enable CORS
+const mongoURI =
+  'mongodb+srv://username:username@cluster0.vi92d.mongodb.net/RecipeVault?retryWrites=true&w=majority&appName=Cluster0';
+mongoose
+  .connect(mongoURI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('Database connection error:', err));
+
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000' }));  // Adjust if needed
+app.use(cors({ origin: 'http://localhost:3000' })); 
 
-// Example API route to fetch all movies
-app.get('/api/movies', async (req, res) => {
-    try {
-        const movies = await Movie.find();
-        res.status(200).json(movies);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Server error' });
-    }
+app.get('/api/recipes', async (req, res) => {
+  try {
+    const recipes = await Recipe.find();
+    res.status(200).json(recipes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// Example API route to add a new movie (adjust as needed)
-app.post('/api/movies', [
-    check('title', 'Title is required').not().isEmpty(),
-    check('director', 'Director is required').not().isEmpty(),
-    check('releaseYear', 'Please include a valid release year').isInt(),
-    check('genre', 'Genre is required').not().isEmpty(),
-    check('rating', 'Rating must be between 0 and 10').optional().isFloat({ min: 0, max: 10 })
-], async (req, res) => {
+app.post(
+  '/api/recipes',
+  [
+    check('name', 'Name is required').not().isEmpty(),
+    check('ingredients', 'Ingredients are required').isArray({ min: 1 }),
+    check('cuisine', 'Cuisine is required').not().isEmpty(),
+    check('preparationTime', 'Preparation time must be a positive number').isInt({ min: 1 }),
+    check('instructions', 'Instructions are required').not().isEmpty(),
+  ],
+  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
+      return res.status(422).json({ errors: errors.array() });
     }
     try {
-        const { title, director, releaseYear, genre, rating } = req.body;
-        const newMovie = new Movie({ title, director, releaseYear, genre, rating });
-        await newMovie.save();
-        res.status(201).json(newMovie);
+      const { name, ingredients, cuisine, preparationTime, instructions } = req.body;
+      const newRecipe = new Recipe({
+        name,
+        ingredients,
+        cuisine,
+        preparationTime,
+        instructions,
+      });
+      await newRecipe.save();
+      res.status(201).json(newRecipe);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Server error' });
+      console.error(err.message);
+      res.status(500).json({ error: 'Server error' });
     }
+  }
+);
+
+app.delete('/api/recipes/:id', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ error: 'Recipe not found' });
+    }
+    await Recipe.deleteOne({ _id: req.params.id }); 
+    res.status(200).json({ message: 'Recipe deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// Serve React frontend in production mode
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'client/build')));
+app.put(
+  '/api/recipes/:id',
+  [
+    check('name', 'Name is required').not().isEmpty(),
+    check('ingredients', 'Ingredients are required').isArray({ min: 1 }),
+    check('cuisine', 'Cuisine is required').not().isEmpty(),
+    check('preparationTime', 'Preparation time must be a positive number').isInt({ min: 1 }),
+    check('instructions', 'Instructions are required').not().isEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    try {
+      const { name, ingredients, cuisine, preparationTime, instructions } = req.body;
+      const updatedRecipe = await Recipe.findByIdAndUpdate(
+        req.params.id,
+        { name, ingredients, cuisine, preparationTime, instructions },
+        { new: true, runValidators: true }
+      );
+      if (!updatedRecipe) {
+        return res.status(404).json({ error: 'Recipe not found' });
+      }
+      res.status(200).json(updatedRecipe);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
 
-    // Handle any other routes by serving the React app's index.html
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-    });
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client/build')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  });
 }
 
-// Start the server
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server running on port ${port}`));

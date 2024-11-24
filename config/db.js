@@ -6,12 +6,13 @@ const db = config.get('mongodbUri');
 const connectDatabase = async () => {
     try {
         await mongoose.connect(db, {
-            // Remove useNewUrlParser and useUnifiedTopology as they are deprecated
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
         });
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error.message);
-        process.exit(1);
+        process.exit(1); 
     }
 };
 

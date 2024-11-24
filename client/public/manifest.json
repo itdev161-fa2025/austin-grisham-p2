@@ -1,6 +1,6 @@
 {
-  "short_name": "MovieList",
-  "name": "Movie Watchlist App",
+  "short_name": "RecipeVault",
+  "name": "RecipeVault App",
   "icons": [
     {
       "src": "favicon.ico",
@@ -19,8 +19,8 @@
     }
   ],
   "start_url": "/",
-  "display": "browser",
-  "theme_color": "#000000",
+  "display": "standalone",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "description": "Track and manage your movie watchlist with ease!"
+  "description": "Store, manage, and share your favorite recipes easily!"
 }
